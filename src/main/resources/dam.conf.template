@@ -1,0 +1,17 @@
+s3 {
+  bucket="${S3_BUCKET}",
+  awsAccessKeyId="${AWS_ACCESS_KEY_ID}",
+  awsSecretAccessKey="${AWS_SECRET_KEY}",
+}
+
+spark {
+  appName: "SparkKafka",
+  master: "${SPARK_MASTER}"
+}
+
+streaming {
+  quorum: "${ZOOKEEPER_QUORUM}",
+  groupId: "${KAFKA_GROUP_ID}",
+  topics: "${KAFKA_TOPICS}",
+  checkpointDirectory: "${CHECKPOINT_DIR}"
+}

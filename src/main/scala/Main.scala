@@ -1,44 +1,52 @@
-import org.apache.spark.rdd.RDD
-import org.apache.spark.SparkConf
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
-import org.apache.spark.streaming._
-import org.apache.spark.streaming.kafka._
-import org.apache.spark.streaming.{Seconds, StreamingContext}
-
 import _root_.kafka.serializer.StringDecoder
-
-import com.typesafe.config._
-import com.typesafe.scalalogging.{LazyLogging}
+import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.scalalogging.LazyLogging
 import org.apache.kafka.clients.consumer.ConsumerConfig
-import org.apache.log4j.{Level, LogManager, PropertyConfigurator}
+import org.apache.spark.streaming.kafka.KafkaUtils
+
 import org.apache.spark.SparkConf
-import org.apache.spark.streaming.dstream.{DStream, InputDStream}
+import org.apache.spark.streaming.dstream.InputDStream
 import org.apache.spark.streaming.{Seconds, StreamingContext}
+
 
 object Main extends LazyLogging {
 
-  def createContext(args: Array[String])
-    : StreamingContext = {
-    logger.info("Creating new Context")
-    val Array(master, zkQuorum, groupId, topics, numThreads) = args
+  val ConfigFilePrefix = "dam"
+
+  def getCheckpointDirectory(configuration: Config): String =
+    configuration
+      .getString("streaming.checkpointDirectory")
+
+  def buildKafkaParameters(configuration: Config): Map[String, String] = {
+    Map[String, String](
+      ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG -> configuration.getString("streaming.quorum"),
+      ConsumerConfig.GROUP_ID_CONFIG -> configuration.getString("streaming.groupId")
+    )
+  }
+
+  def createContext(configuration: Config): StreamingContext = {
+    logger.warn("Creating new Context")
+
+    val sparkMaster = configuration.getString("spark.master")
+    val sparkAppName = configuration.getString("spark.appName")
+    val checkpointDirectory = getCheckpointDirectory(configuration)
+    val topics = {
+      configuration
+        .getString("streaming.topics")
+        .split(",")
+        .toSet
+    }
+    val kafkaParameters = buildKafkaParameters(configuration)
 
     val sparkConf = new SparkConf()
-      .setAppName("SparkKafka")
-      .setMaster(master)
+      .setAppName(sparkAppName)
+      .setMaster(sparkMaster)
 
     val ssc = new StreamingContext(sparkConf, Seconds(60))
-    ssc.checkpoint("tmp")
-
-
-    val topicsSeq = topics.split(",").toSet
-    val kafkaParams = Map[String, String](
-      ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG -> zkQuorum,
-      ConsumerConfig.GROUP_ID_CONFIG -> groupId
-    )
+    ssc.checkpoint(checkpointDirectory)
 
     val messagesDStream: InputDStream[(String, String)] = {
-      KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaParams, topicsSeq)
+      KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaParameters, topics)
     }
 
     messagesDStream.foreachRDD { rdd =>
@@ -48,19 +56,18 @@ object Main extends LazyLogging {
     ssc
   }
 
+  def loadAppConfiguration(file: String): Config = ConfigFactory.load(file)
+
   def main(args: Array[String]) {
     if (args.length < 2) {
       System.err.println("Usage: KafkaWordCount <zkQuorum> <group> <topics> <numThreads>")
       System.exit(1)
     }
-    println(args)
-    println(args(0))
-    val Array(master, zkQuorum, group, topics, numThreads) = args
-    val appConf = ConfigFactory.load("dam")
-    val checkpointDirectory = "tmp"
+    val configuration = loadAppConfiguration("dam")
+    val checkpointDirectory = getCheckpointDirectory(configuration)
 
     val ssc = StreamingContext.getOrCreate(checkpointDirectory,
-      () => createContext(args))
+      () => createContext(configuration))
 
     ssc.start()             // Start the computation
     ssc.awaitTermination()  // Wait for the computation to terminate
