@@ -1,22 +1,22 @@
 # Copy/Paste coding...
 
 zookeeper:
-  image: wurstmeister/zookeeper
-  ports:
-    - "2181"
+    image: wurstmeister/zookeeper
+    ports:
+        - "2181"
 
 kafka:
-  image: wurstmeister/kafka:0.8.2.1
-  ports:
-    - "9092:9092"
-  links:
-    - zookeeper:zk
-  hostname: kafka
-  environment:
-    KAFKA_ADVERTISED_HOST_NAME: "192.168.99.100"
-    KAFKA_CREATE_TOPICS: "logs"
-  volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
+    image: wurstmeister/kafka:0.8.2.1
+    ports:
+        - "9092:9092"
+    links:
+        - zookeeper:zk
+    hostname: kafka
+    environment:
+        KAFKA_ADVERTISED_HOST_NAME: "192.168.99.100"
+        KAFKA_CREATE_TOPICS: "logs"
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
 
 namenode:
     image: gelog/hadoop:2.6.0
@@ -25,7 +25,7 @@ namenode:
     command: hdfs namenode
     hostname: hdfs-namenode
     volumes:
-      - ./name:/data/dfs/name
+        - ./name:/data/dfs/name
 
 datanode:
     image: gelog/hadoop:2.6.0
@@ -35,8 +35,8 @@ datanode:
     links:
         - namenode:hdfs-namenode
     volumes:
-      - ./data:/data/dfs/data
-      - ./conf/hadoop:/etc/hadoop
+        - ./data:/data/dfs/data
+        - ./conf/hadoop:/etc/hadoop
 
 secondarynamenode:
     image: gelog/hadoop:2.6.0
@@ -47,60 +47,60 @@ secondarynamenode:
         - namenode:hdfs-namenode
 
 spark_master:
-  image: gettyimages/spark
-  command: bin/spark-class org.apache.spark.deploy.master.Master -h master
-  hostname: master
-  environment:
-    MASTER: spark://master:7077
-    SPARK_CONF_DIR: /conf
-    SPARK_PUBLIC_DNS: localhost
-  expose:
-    - 7001
-    - 7002
-    - 7003
-    - 7004
-    - 7005
-    - 7006
-    - 7077
-    - 6066
-  ports:
-    - 4040:4040
-    - 6066:6066
-    - 7077:7077
-    - 8080:8080
-  links:
-    - namenode
-  volumes:
-    - ./conf/master:/conf
-    - ./data:/tmp/data
-    - ./conf/hadoop:/etc/hadoop
+    image: gettyimages/spark
+    command: bin/spark-class org.apache.spark.deploy.master.Master -h master
+    hostname: master
+    environment:
+        MASTER: spark://master:7077
+        SPARK_CONF_DIR: /conf
+        SPARK_PUBLIC_DNS: localhost
+    expose:
+        - 7001
+        - 7002
+        - 7003
+        - 7004
+        - 7005
+        - 7006
+        - 7077
+        - 6066
+    ports:
+        - 4040:4040
+        - 6066:6066
+        - 7077:7077
+        - 8080:8080
+    links:
+        - namenode
+    volumes:
+        - ./conf/master:/conf
+        - ./data:/tmp/data
+        - ./conf/hadoop:/etc/hadoop
 
 spark_worker:
-  image: gettyimages/spark
-  command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://master:7077
-  hostname: worker
-  environment:
-    SPARK_CONF_DIR: /conf
-    SPARK_WORKER_CORES: 2
-    SPARK_WORKER_MEMORY: 1g
-    SPARK_WORKER_PORT: 8881
-    SPARK_WORKER_WEBUI_PORT: 8081
-    SPARK_PUBLIC_DNS: localhost
-  links:
-    - spark_master
-    - kafka
-    - namenode
-  expose:
-    - 7012
-    - 7013
-    - 7014
-    - 7015
-    - 7016
-    - 8881
-  ports:
-    - 8081:8081
-  volumes:
-    - ./conf/worker:/conf
-    - ./data:/tmp/data
-    - ./conf/hadoop:/etc/hadoop
+    image: gettyimages/spark
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://master:7077
+    hostname: worker
+    environment:
+        SPARK_CONF_DIR: /conf
+        SPARK_WORKER_CORES: 2
+        SPARK_WORKER_MEMORY: 1g
+        SPARK_WORKER_PORT: 8881
+        SPARK_WORKER_WEBUI_PORT: 8081
+        SPARK_PUBLIC_DNS: localhost
+    links:
+        - spark_master
+        - kafka
+        - namenode
+    expose:
+        - 7012
+        - 7013
+        - 7014
+        - 7015
+        - 7016
+        - 8881
+    ports:
+        - 8081:8081
+      volumes:
+        - ./conf/worker:/conf
+        - ./data:/tmp/data
+        - ./conf/hadoop:/etc/hadoop
 
