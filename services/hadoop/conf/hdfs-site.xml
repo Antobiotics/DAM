@@ -20,6 +20,10 @@
         <value>0</value>
     </property>
     <property>
+        <name>dfs.permissions</name>
+        <value>false</value>
+    </property>
+    <property>
         <name>dfs.datanode.data.dir</name>
         <value>file:///data/dfs/data</value>
     </property>

@@ -1,4 +1,4 @@
-# Copy/Paste coding...
+# Copy/Paste coding... but not really
 version: "2"
 
 services:
@@ -25,7 +25,8 @@ services:
 
 
     namenode:
-        image: gelog/hadoop
+        image: hadoop
+        build: ./hadoop
         container_name: hdfs-namenode
         expose:
             - 9000
@@ -35,11 +36,12 @@ services:
         command: hdfs namenode
         hostname: hdfs-namenode
         volumes:
-            - ./conf/name:/data/dfs/name
+            - ./name:/data/dfs/name
 
 
     datanode:
-        image: gelog/hadoop
+        image: hadoop
+        build: ./hadoop
         container_name: hdfs-datanode
         command: hdfs datanode
         ports:
@@ -47,12 +49,12 @@ services:
         links:
             - namenode:hdfs-namenode
         volumes:
-            - ./conf/data:/data/dfs/data
-            - ./conf/hadoop:/etc/hadoop
+            - ./data:/data/dfs/data
 
 
     secondarynamenode:
-        image: gelog/hadoop
+        image: hadoop
+        build: ./hadoop
         container_name: hdfs-secondarynamenode
         command: hdfs secondarynamenode
         ports:
@@ -88,8 +90,7 @@ services:
             - namenode
         volumes:
             - ./conf/master:/conf
-            - ./conf/data:/tmp/data
-            - ./conf/hadoop:/etc/hadoop
+            - ./data:/tmp/data
 
 
     spark_worker:
@@ -119,6 +120,5 @@ services:
             - 8081:8081
         volumes:
             - ./conf/worker:/conf
-            - ./conf/data:/tmp/data
-            - ./conf/hadoop:/etc/hadoop
+            - ./data:/tmp/data
 
