@@ -6,10 +6,43 @@ import kafka.producer.Producer
 import kafka.producer.KeyedMessage
 import java.util.Date
 
-
+import play.api.libs.json._
 import app.SKApp
 
+
 object LogProducer extends SKApp {
+
+  val PropertyTypeChoices = Map[Int, JsValue](
+    0 -> JsNumber(1),
+    1 -> JsString("a"),
+    2 -> JsBoolean(true)
+  )
+
+  def randomString(length: Int): String = {
+    Random.alphanumeric.take(length).mkString
+  }
+
+  def randomValueForPropertyType(rnd: Random, value: JsValue): JsValue = {
+       value match {
+        case _: JsNumber => JsNumber(rnd.nextInt(100))
+        case _: JsBoolean => JsBoolean(rnd.nextBoolean())
+        case _: JsString => JsString(rnd.nextString(24))
+      }
+  }
+
+  def buildRandomProperty(rnd: Random): JsObject = {
+    val propertySize = rnd.nextInt(10)
+    val properties = Seq()
+
+    for(i <- Range(0, propertySize)) {
+      val choice = rnd.nextInt(2)
+      val propertyType = PropertyTypeChoices(choice)
+      val propertyValue = randomValueForPropertyType(rnd, propertyType)
+
+      properties :+ propertyValue
+    }
+    JsObject(properties)
+  }
 
   def buildProperties(): Properties = {
     val props = new Properties()
@@ -28,10 +61,20 @@ object LogProducer extends SKApp {
     val producer = new Producer[String, String](config)
     val t = System.currentTimeMillis()
     for (nEvents <- Range(0, events.toInt)) {
-      val runtime = new Date().getTime
-      val ip = "192.168.2." + rnd.nextInt(255)
-      val msg = runtime + "," + nEvents + ",www.example.com," + ip
-      val data = new KeyedMessage[String, String](topic, ip, msg)
+      val uid = JsString(randomString(24))
+      val log = JsObject(
+        Seq(
+          "_t" -> JsNumber(System.currentTimeMillis / 1000),
+          "_p" -> uid,
+          "_u" -> JsString("device"),
+          "properties" -> buildRandomProperty(rnd)
+        )
+      )
+
+      val logString = log.toString()
+      logger.warn(logString)
+
+      val data = new KeyedMessage[String, String](topic, uid.toString(), logString)
       producer.send(data)
     }
 
