@@ -4,6 +4,10 @@ tags
 tmp/
 src/main/resources/dam.conf
 
+## Hadoop and other directories ##
+services/conf/data/
+services/conf/name/
+
 ## Scala ###
 *.class
 *.log

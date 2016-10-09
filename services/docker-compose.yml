@@ -25,7 +25,7 @@ services:
 
 
     namenode:
-        image: gelog/hadoop:2.6.0
+        image: gelog/hadoop
         container_name: hdfs-namenode
         ports:
             - "50070:50070"
@@ -36,7 +36,7 @@ services:
 
 
     datanode:
-        image: gelog/hadoop:2.6.0
+        image: gelog/hadoop
         container_name: hdfs-datanode
         command: hdfs datanode
         ports:
@@ -49,7 +49,7 @@ services:
 
 
     secondarynamenode:
-        image: gelog/hadoop:2.6.0
+        image: gelog/hadoop
         container_name: hdfs-secondarynamenode
         command: hdfs secondarynamenode
         ports:
