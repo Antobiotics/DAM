@@ -28,6 +28,7 @@ object LogProducer extends SKApp {
         case _: JsNumber => JsNumber(rnd.nextInt(100))
         case _: JsBoolean => JsBoolean(rnd.nextBoolean())
         case _: JsString => JsString(rnd.nextString(5))
+        case _ => JsString(rnd.nextString(10))
       }
   }
 
