@@ -1,6 +1,4 @@
 import _root_.kafka.serializer.StringDecoder
-import com.typesafe.config.{Config, ConfigFactory}
-import com.typesafe.scalalogging.LazyLogging
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.spark.streaming.kafka.KafkaUtils
 
@@ -8,44 +6,36 @@ import org.apache.spark.SparkConf
 import org.apache.spark.streaming.dstream.InputDStream
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 
+import app.SKApp
 
-object Main extends LazyLogging {
+object Main extends SKApp {
 
-  val ConfigFilePrefix = "dam"
-
-  def loadAppConfiguration(file: String): Config = ConfigFactory.load(file)
-
-  def getCheckpointDirectory(configuration: Config): String =
-    configuration
-      .getString("streaming.checkpointDirectory")
-
-  def buildKafkaParameters(configuration: Config): Map[String, String] = {
+  def buildKafkaParameters(): Map[String, String] = {
     Map[String, String](
-      ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG -> configuration.getString("streaming.quorum"),
-      ConsumerConfig.GROUP_ID_CONFIG -> configuration.getString("streaming.groupId")
+      ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG -> Quorum,
+      ConsumerConfig.GROUP_ID_CONFIG -> Configuration.getString("streaming.groupId")
     )
   }
 
-  def createContext(configuration: Config): StreamingContext = {
+  def createContext(): StreamingContext = {
     logger.warn("Creating new Context")
 
-    val sparkMaster = configuration.getString("spark.master")
-    val sparkAppName = configuration.getString("spark.appName")
-    val checkpointDirectory = getCheckpointDirectory(configuration)
+    val sparkMaster = Configuration.getString("spark.master")
+    val sparkAppName = Configuration.getString("spark.appName")
     val topics = {
-      configuration
+      Configuration
         .getString("streaming.topics")
         .split(",")
         .toSet
     }
-    val kafkaParameters = buildKafkaParameters(configuration)
+    val kafkaParameters = buildKafkaParameters()
 
     val sparkConf = new SparkConf()
       .setAppName(sparkAppName)
       .setMaster(sparkMaster)
 
     val ssc = new StreamingContext(sparkConf, Seconds(60))
-    ssc.checkpoint(checkpointDirectory)
+    ssc.checkpoint(CheckpointDirectory)
 
     val messagesDStream: InputDStream[(String, String)] = {
       KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaParameters, topics)
@@ -59,11 +49,8 @@ object Main extends LazyLogging {
   }
 
   def main(args: Array[String]) {
-    val configuration = loadAppConfiguration("dam")
-    val checkpointDirectory = getCheckpointDirectory(configuration)
-
-    val ssc = StreamingContext.getOrCreate(checkpointDirectory,
-      () => createContext(configuration))
+    val ssc = StreamingContext.getOrCreate(CheckpointDirectory,
+      () => createContext())
 
     ssc.start()             // Start the computation
     ssc.awaitTermination()  // Wait for the computation to terminate
