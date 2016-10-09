@@ -9,6 +9,7 @@ import java.util.Date
 import play.api.libs.json._
 import app.SKApp
 
+import scala.collection.mutable.Buffer
 
 object LogProducer extends SKApp {
 
@@ -26,22 +27,22 @@ object LogProducer extends SKApp {
        value match {
         case _: JsNumber => JsNumber(rnd.nextInt(100))
         case _: JsBoolean => JsBoolean(rnd.nextBoolean())
-        case _: JsString => JsString(rnd.nextString(24))
+        case _: JsString => JsString(rnd.nextString(5))
       }
   }
 
   def buildRandomProperty(rnd: Random): JsObject = {
-    val propertySize = rnd.nextInt(10)
-    val properties = Seq()
+    val propertySize = rnd.nextInt(5)
+    val properties = Buffer[(String, JsValue)]()
 
     for(i <- Range(0, propertySize)) {
       val choice = rnd.nextInt(2)
       val propertyType = PropertyTypeChoices(choice)
       val propertyValue = randomValueForPropertyType(rnd, propertyType)
-
-      properties :+ propertyValue
+      properties += (i.toString -> propertyValue)
     }
-    JsObject(properties)
+
+    JsObject(properties.toSeq)
   }
 
   def buildProperties(): Properties = {
