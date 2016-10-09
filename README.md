@@ -14,3 +14,5 @@ LogProducer -> Kafka -> Main -> Spark-streaming -> s3
 ```
 > make compose-services
 ```
+
+As it won't probably work out of the box, please run `docker ps` to check it actually set up everything

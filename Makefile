@@ -6,3 +6,6 @@ run-producer:
 
 compose-services:
 	docker-compose -f services/docker-compose.yml up -d
+
+clean-checkpoints:
+	rm -rf ./tmp/

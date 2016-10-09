@@ -18,10 +18,12 @@ object Main extends SKApp {
   }
 
   def createContext(): StreamingContext = {
-    logger.warn("Creating new Context")
 
     val sparkMaster = Configuration.getString("spark.master")
     val sparkAppName = Configuration.getString("spark.appName")
+
+    logger.warn(s"Creating new Context on master: ${sparkMaster} with name: ${sparkAppName}")
+
     val topics = {
       Configuration
         .getString("streaming.topics")

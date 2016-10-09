@@ -1,4 +1,5 @@
-# Copy/Paste coding based on: https://github.com/rogaha/data-processing-pipeline/blob/master/docker-compose.yml
+# Copy/Paste coding...
+
 zookeeper:
   image: wurstmeister/zookeeper
   ports:
@@ -10,11 +11,40 @@ kafka:
     - "9092:9092"
   links:
     - zookeeper:zk
+  hostname: kafka
   environment:
-    KAFKA_ADVERTISED_HOST_NAME: ""
+    KAFKA_ADVERTISED_HOST_NAME: "192.168.99.100"
     KAFKA_CREATE_TOPICS: "logs"
   volumes:
     - /var/run/docker.sock:/var/run/docker.sock
+
+namenode:
+    image: gelog/hadoop:2.6.0
+    ports:
+        - "50070:50070"
+    command: hdfs namenode
+    hostname: hdfs-namenode
+    volumes:
+      - ./name:/data/dfs/name
+
+datanode:
+    image: gelog/hadoop:2.6.0
+    command: hdfs datanode
+    ports:
+        - "50075"
+    links:
+        - namenode:hdfs-namenode
+    volumes:
+      - ./data:/data/dfs/data
+      - ./conf/hadoop:/etc/hadoop
+
+secondarynamenode:
+    image: gelog/hadoop:2.6.0
+    command: hdfs secondarynamenode
+    ports:
+        - "50090:50090"
+    links:
+        - namenode:hdfs-namenode
 
 spark_master:
   image: gettyimages/spark
@@ -38,9 +68,12 @@ spark_master:
     - 6066:6066
     - 7077:7077
     - 8080:8080
+  links:
+    - namenode
   volumes:
     - ./conf/master:/conf
     - ./data:/tmp/data
+    - ./conf/hadoop:/etc/hadoop
 
 spark_worker:
   image: gettyimages/spark
@@ -56,6 +89,7 @@ spark_worker:
   links:
     - spark_master
     - kafka
+    - namenode
   expose:
     - 7012
     - 7013
@@ -68,3 +102,5 @@ spark_worker:
   volumes:
     - ./conf/worker:/conf
     - ./data:/tmp/data
+    - ./conf/hadoop:/etc/hadoop
+
