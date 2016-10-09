@@ -3,3 +3,6 @@ run-consumer:
 
 run-producer:
 	sbt "run-main LogProducer 100 test"
+
+compose-services:
+	docker-compose -f services/docker-compose.yml up -d
