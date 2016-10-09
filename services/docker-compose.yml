@@ -27,8 +27,11 @@ services:
     namenode:
         image: gelog/hadoop
         container_name: hdfs-namenode
+        expose:
+            - 9000
         ports:
             - "50070:50070"
+            - "9000:9000"
         command: hdfs namenode
         hostname: hdfs-namenode
         volumes:

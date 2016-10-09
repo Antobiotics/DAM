@@ -4,7 +4,6 @@ import java.util.Properties
 import scala.util.Random
 import kafka.producer.Producer
 import kafka.producer.KeyedMessage
-import java.util.Date
 
 import play.api.libs.json._
 import app.SKApp
