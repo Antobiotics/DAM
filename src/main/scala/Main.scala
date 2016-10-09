@@ -13,6 +13,8 @@ object Main extends LazyLogging {
 
   val ConfigFilePrefix = "dam"
 
+  def loadAppConfiguration(file: String): Config = ConfigFactory.load(file)
+
   def getCheckpointDirectory(configuration: Config): String =
     configuration
       .getString("streaming.checkpointDirectory")
@@ -56,13 +58,7 @@ object Main extends LazyLogging {
     ssc
   }
 
-  def loadAppConfiguration(file: String): Config = ConfigFactory.load(file)
-
   def main(args: Array[String]) {
-    if (args.length < 2) {
-      System.err.println("Usage: KafkaWordCount <zkQuorum> <group> <topics> <numThreads>")
-      System.exit(1)
-    }
     val configuration = loadAppConfiguration("dam")
     val checkpointDirectory = getCheckpointDirectory(configuration)
 
