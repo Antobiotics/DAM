@@ -6,7 +6,9 @@ src/main/resources/dam.conf
 
 ## Hadoop and other directories ##
 services/conf/data/
+services/data/
 services/conf/name/
+services/name/
 
 ## Scala ###
 *.class

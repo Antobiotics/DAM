@@ -36,9 +36,11 @@ object Main extends SKApp {
       .setAppName(sparkAppName)
       .setMaster(sparkMaster)
 
+    logger.warn("Setting up context")
     val ssc = new StreamingContext(sparkConf, Seconds(60))
     ssc.checkpoint(CheckpointDirectory)
 
+    logger.warn(s"Setting up Direct Stream to ${Quorum}")
     val messagesDStream: InputDStream[(String, String)] = {
       KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaParameters, topics)
     }
