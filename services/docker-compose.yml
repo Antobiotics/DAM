@@ -7,10 +7,12 @@ services:
         container_name: zookeeper
         ports:
             - "2181"
+        expose:
+            - 2181
 
 
     kafka:
-        image: wurstmeister/kafka:0.8.2.1
+        image: wurstmeister/kafka
         container_name: kafka
         ports:
             - "9092:9092"
@@ -18,15 +20,19 @@ services:
             - zookeeper:zk
         hostname: kafka
         environment:
-            KAFKA_ADVERTISED_HOST_NAME: "192.168.99.100"
-            KAFKA_CREATE_TOPICS: "logs"
+            #KAFKA_ADVERTISED_HOST_NAME: 192.168.99.100
+            #KAFKA_CREATE_TOPICS: "logs"
+            KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+        ports:
+            - "9092:9092"
+        expose:
+            - 9092
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
 
 
     namenode:
-        image: hadoop
-        build: ./hadoop
+        image: grgoirel/hadoop:v0.0.0
         container_name: hdfs-namenode
         expose:
             - 9000
@@ -40,8 +46,7 @@ services:
 
 
     datanode:
-        image: hadoop
-        build: ./hadoop
+        image: grgoirel/hadoop:v0.0.0
         container_name: hdfs-datanode
         command: hdfs datanode
         ports:
@@ -53,8 +58,7 @@ services:
 
 
     secondarynamenode:
-        image: hadoop
-        build: ./hadoop
+        image: grgoirel/hadoop:v0.0.0
         container_name: hdfs-secondarynamenode
         command: hdfs secondarynamenode
         ports:
@@ -88,6 +92,9 @@ services:
             - 8080:8080
         links:
             - namenode
+            - kafka
+            - zookeeper
+            - datanode
         volumes:
             - ./conf/master:/conf
             - ./data:/tmp/data
@@ -108,6 +115,7 @@ services:
         links:
             - spark_master
             - kafka
+            - zookeeper
             - namenode
         expose:
             - 7012
